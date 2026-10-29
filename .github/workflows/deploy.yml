@@ -92,5 +92,5 @@ jobs:
       - name: Verificar acceso protegido
         env:
           DEPLOYMENT_URL: ${{ steps.deploy.outputs.deployment-url }}
-        run: node -e "const url=process.env.DEPLOYMENT_URL;if(!url)throw Error('No se obtuvo la URL publicada.');const r=await fetch(new URL('/api/stock',url));const d=await r.json();if(!r.ok||d.user!==null||d.products)throw Error('No se pudo verificar el acceso protegido.');console.log('Aplicación publicada y stock protegido.');" --input-type=module
+        run: node scripts/verify-published.mjs
 
