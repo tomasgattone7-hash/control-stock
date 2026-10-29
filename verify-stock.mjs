@@ -17,6 +17,12 @@ d=await state();p=d.products.find(x=>x.id===p.id);assert.equal(p.quantity,9);ass
 const parallel=await Promise.all([1,2].map(n=>call({...move,operation:crypto.randomUUID(),version:p.version,kind:'in',amount:n},employeeCookie)));assert.deepEqual(parallel.map(x=>x.status).sort(),[200,409]);console.log('OK dos empleados en simultáneo no sobrescriben stock');
 const plate={action:'product',name:'Placa de prueba 18 mm',category:'Placas',unit:'placas',quantity:2.5,minimum:1,warning:2,location:'Estante de prueba',notes:''};assert.equal((await call(plate,employeeCookie)).status,200);d=await state();p=d.products.find(x=>x.name===plate.name);assert.equal((await call({action:'move',id:p.id,version:p.version,operation:crypto.randomUUID(),kind:'count',amount:0,reason:'Recuento físico de prueba'},employeeCookie)).status,200);console.log('OK alta de placas, cantidades decimales y recuento cero');
 const csrf=await fetch(base+'/api/stock',{method:'POST',headers:{'Content-Type':'application/json',Origin:'https://otro-sitio.test',Cookie:cookie},body:JSON.stringify({action:'logout'})});assert.equal(csrf.status,403);
+assert.equal((await call({action:'mail',provider:'unknown',from:'sender@example.test',key:'fake-test-key'})).status,400);
+assert.equal((await call({action:'mail',provider:'brevo',from:'sender@example.test'})).status,400);
+assert.equal((await call({action:'mail',provider:'brevo',from:'sender@example.test',key:'fake-test-key'})).status,200);
+d=await state();assert.equal(d.mail.provider,'brevo');assert.equal(d.mail.configured,true);assert.equal(JSON.stringify(d).includes('fake-test-key'),false);
+assert.equal((await call({action:'mail',provider:'resend',from:'sender@example.test'})).status,400);
+assert.equal((await call({action:'mail',provider:'brevo',from:'sender@example.test'})).status,200);console.log('OK conexión Brevo: permisos, clave privada y cambio de servicio validado');
 assert.equal((await call({action:'logout'},employeeCookie)).status,200);assert.equal((await state(employeeCookie)).user,null);console.log('OK protección de formularios y cierre de sesión');
 console.log('Todas las verificaciones funcionales pasaron. Base local de prueba; producción intacta.');
 
