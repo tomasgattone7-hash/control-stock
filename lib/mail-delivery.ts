@@ -1,6 +1,6 @@
 export type MailProvider = 'resend' | 'brevo';
 type Message = { subject: string; text: string; alertId: string };
-const destination = 'zarpadomuebles@gmail.com';
+const destination = 'zarpadomueble@gmail.com';
 
 export async function deliverMail(provider: MailProvider, key: string, from: string, message: Message, request: typeof fetch = fetch) {
   const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode('zm-stock-alert:' + message.alertId)));

@@ -40,7 +40,7 @@ Con DEPLOY_ENABLED=true, los próximos cambios en main se publican automáticame
 ## Activar el uso
 Abrir la URL publicada con el fragmento /#activar= seguido del valor de SETUP_KEY para crear la cuenta administradora. Ese enlace es solo del titular. Las siguientes personas se registran desde la URL normal y requieren aprobación en Equipo.
 
-En Configuración conectar Resend con remitente verificado para activar las alertas a zarpadomuebles@gmail.com. El destinatario está fijado al correo que pidió el usuario. El servicio de correo es una configuración posterior al alojamiento; sin esa conexión los avisos permanecen pendientes.
+En Configuración conectar Brevo con un correo remitente verificado, o Resend con dominio verificado para activar las alertas a zarpadomueble@gmail.com. El destinatario está fijado al correo que pidió el usuario. El servicio de correo es una configuración posterior al alojamiento; sin esa conexión los avisos permanecen pendientes.
 
 ## Comprobaciones
 El flujo CI verifica acceso anónimo protegido, carga de un inventario ficticio, registro y aprobación, límites de permisos, movimientos duplicados, concurrencia, rechazo de negativos, placas con decimales y cierre de sesión.

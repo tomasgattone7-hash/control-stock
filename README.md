@@ -12,7 +12,7 @@ Menos de 10: crítico. Entre 10 y 12 inclusive: aviso previo. Más de 12: dispon
 ## Acceso y correo
 El titular crea la primera cuenta con su enlace de activación. Cada empleado se registra y espera aprobación. El administrador puede suspender cuentas y restablecer contraseñas.
 
-Las alertas tienen como destino zarpadomuebles@gmail.com. Desde Configuración se puede conectar Brevo con un correo remitente verificado (sin dominio propio usa temporalmente un remitente compartido), o Resend con dominio verificado. Se necesita la clave de la cuenta del servicio. La clave se guarda cifrada y no se expone al navegador. Los avisos sin conexión permanecen pendientes; guardar la conexión no confirma la entrega.
+Las alertas tienen como destino zarpadomueble@gmail.com. Desde Configuración se puede conectar Brevo con un correo remitente verificado (sin dominio propio usa temporalmente un remitente compartido), o Resend con dominio verificado. Se necesita la clave de la cuenta del servicio. La clave se guarda cifrada y no se expone al navegador. Los avisos sin conexión permanecen pendientes; guardar la conexión no confirma la entrega.
 
 ## Verificación
 GitHub Actions compila y verifica el proyecto y ejecuta pruebas funcionales con datos temporales. Los cambios simultáneos se protegen por versión y las operaciones repetidas no descuentan dos veces.
