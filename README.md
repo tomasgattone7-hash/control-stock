@@ -22,4 +22,3 @@ Node.js 22.13 o superior. Instalar componentes con npm ci y construir con npm ru
 
 No se incluyen claves de producción, archivos de configuración local, usuarios de prueba ni registros reales del alojamiento anterior.
 
-

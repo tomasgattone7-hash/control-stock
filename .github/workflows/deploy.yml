@@ -1,0 +1,96 @@
+name: Verificar y publicar inventario
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: inventario-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Instalar componentes
+        run: npm ci --no-audit --no-fund
+      - name: Comprobar tipos
+        run: npx tsc --noEmit
+      - name: Construir aplicación
+        run: npm run build
+      - name: Probar cuentas y stock en una base temporal
+        run: node scripts/ci-functional.mjs
+      - name: Conservar la versión verificada
+        uses: actions/upload-artifact@v4
+        with:
+          name: aplicacion-verificada
+          path: dist/
+          include-hidden-files: true
+          retention-days: 3
+  publicar:
+    needs: verificar
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || vars.DEPLOY_ENABLED == 'true')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: production
+    permissions:
+      contents: read
+      deployments: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - uses: actions/download-artifact@v4
+        with:
+          name: aplicacion-verificada
+          path: dist/
+      - name: Comprobar configuración del alojamiento
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          APP_SECRET: ${{ secrets.APP_SECRET }}
+          SETUP_KEY: ${{ secrets.SETUP_KEY }}
+          INITIAL_STOCK_JSON: ${{ secrets.INITIAL_STOCK_JSON }}
+        run: node -e "for(const key of ['CLOUDFLARE_API_TOKEN','CLOUDFLARE_ACCOUNT_ID','APP_SECRET','SETUP_KEY','INITIAL_STOCK_JSON'])if(!process.env[key])throw new Error('Falta configurar el secreto '+key);for(const key of ['APP_SECRET','SETUP_KEY'])if(process.env[key].length<32)throw new Error(key+' debe tener al menos 32 caracteres aleatorios.');"
+      - name: Vincular la base compartida
+        env:
+          CLOUDFLARE_DATABASE_ID: ${{ vars.CLOUDFLARE_DATABASE_ID }}
+          CLOUDFLARE_WORKER_NAME: ${{ vars.CLOUDFLARE_WORKER_NAME }}
+        run: node scripts/prepare-github-deploy.mjs
+      - name: Aplicar estructura de la base de datos
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: d1 migrations apply DB --remote --config dist/server/wrangler.json
+      - name: Publicar aplicación completa
+        id: deploy
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: dist/server
+          command: deploy
+          secrets: |
+            APP_SECRET
+            SETUP_KEY
+            INITIAL_STOCK_JSON
+        env:
+          APP_SECRET: ${{ secrets.APP_SECRET }}
+          SETUP_KEY: ${{ secrets.SETUP_KEY }}
+          INITIAL_STOCK_JSON: ${{ secrets.INITIAL_STOCK_JSON }}
+      - name: Verificar acceso protegido
+        env:
+          DEPLOYMENT_URL: ${{ steps.deploy.outputs.deployment-url }}
+        run: node -e "const url=process.env.DEPLOYMENT_URL;if(!url)throw Error('No se obtuvo la URL publicada.');const r=await fetch(new URL('/api/stock',url));const d=await r.json();if(!r.ok||d.user!==null||d.products)throw Error('No se pudo verificar el acceso protegido.');console.log('Aplicación publicada y stock protegido.');" --input-type=module
+
